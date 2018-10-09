@@ -219,8 +219,38 @@
                 ]
             }
         },
+        "NodeAutoScalingGroup": {
+            "Type": "AWS::AutoScaling::AutoScalingGroup",
+            "Properties": {
+                "LaunchConfigurationName": {
+                    "Ref": "BastionLaunchConfiguration"
+                },
+                "VPCZoneIdentifier": [
+                    {
+                        "Ref": "NodeSubnet"
+                    }
+                ],
+                "MinSize": 1,
+                "MaxSize": 1,
+                "Cooldown": "300",
+                "DesiredCapacity": 1,
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "LinuxBastion",
+                        "PropagateAtLaunch": "true"
+                    }
+                ]
+            },
+            "CreationPolicy": {
+                "ResourceSignal": {
+                    "Count": 1,
+                    "Timeout": "PT30M"
+                }
+            }
+        },
         "ReplicaNodeInstance": {
-            "Type": "AWS::EC2::Instance",
+            "Type": "AWS::AutoScaling::LaunchConfiguration",
             "Metadata": {
                 "HostRole": "MongoDB Node",
                 "AWS::CloudFormation::Init": {
