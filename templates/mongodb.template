@@ -822,35 +822,6 @@
         }
     },
     "Outputs": {
-        "PrimaryReplicaNodeIp": {
-            "Value": {
-                "Fn::GetAtt": [
-                    "PrimaryReplicaNode0",
-                    "Outputs.NodePrivateIp"
-                ]
-            },
-            "Description": "Private IP Address of Primary Replica Node"
-        },
-        "SecondaryReplicaNode0Ip": {
-            "Value": {
-                "Fn::GetAtt": [
-                    "SecondaryReplicaNode0",
-                    "Outputs.NodePrivateIp"
-                ]
-            },
-            "Description": "Private IP Address of Secondary Replica 0 Node",
-            "Condition": "CreateThreeReplicaSet"
-        },
-        "SecondaryReplicaNode1Ip": {
-            "Value": {
-                "Fn::GetAtt": [
-                    "SecondaryReplicaNode1",
-                    "Outputs.NodePrivateIp"
-                ]
-            },
-            "Description": "Private IP Address of Secondary Replica 1 Node",
-            "Condition": "CreateThreeReplicaSet"
-        },
         "MongoDBServerAccessSecurityGroup": {
             "Value": {
                 "Ref": "MongoDBServerAccessSecurityGroup"

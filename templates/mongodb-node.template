@@ -195,35 +195,11 @@
         }
     },
     "Resources": {
-        "ReplicaNodeNetworkInterface": {
-            "Type": "AWS::EC2::NetworkInterface",
-            "Properties": {
-                "Description": "Network Interface for Mongo Node",
-                "SubnetId": {
-                    "Ref": "NodeSubnet"
-                },
-                "GroupSet": [
-                    {
-                        "Ref": "MongoDBServerSecurityGroupID"
-                    },
-                    {
-                        "Ref": "MongoDBServersSecurityGroupID"
-                    }
-                ],
-                "SourceDestCheck": "true",
-                "Tags": [
-                    {
-                        "Key": "Network",
-                        "Value": "Private"
-                    }
-                ]
-            }
-        },
         "NodeAutoScalingGroup": {
             "Type": "AWS::AutoScaling::AutoScalingGroup",
             "Properties": {
                 "LaunchConfigurationName": {
-                    "Ref": "BastionLaunchConfiguration"
+                    "Ref": "ReplicaNodeInstance"
                 },
                 "VPCZoneIdentifier": [
                     {
@@ -237,16 +213,33 @@
                 "Tags": [
                     {
                         "Key": "Name",
-                        "Value": "LinuxBastion",
-                        "PropagateAtLaunch": "true"
+                        "Value": {
+                            "Ref": "ReplicaNodeNameTag"
+                        },
+                        "PropagateAtLaunch": true
+                    },
+                    {
+                        "Key": "ClusterReplicaSetCount",
+                        "Value": {
+                            "Ref": "ClusterReplicaSetCount"
+                        },
+                        "PropagateAtLaunch": true
+                    },
+                    {
+                        "Key": "NodeReplicaSetIndex",
+                        "Value": {
+                            "Ref": "NodeReplicaSetIndex"
+                        },
+                        "PropagateAtLaunch": true
+                    },
+                    {
+                        "Key": "ReplicaShardIndex",
+                        "Value": {
+                            "Ref": "ReplicaShardIndex"
+                        },
+                        "PropagateAtLaunch": true
                     }
                 ]
-            },
-            "CreationPolicy": {
-                "ResourceSignal": {
-                    "Count": 1,
-                    "Timeout": "PT30M"
-                }
             }
         },
         "ReplicaNodeInstance": {
@@ -269,12 +262,12 @@
                 }
             },
             "Properties": {
-                "NetworkInterfaces": [
+                "SecurityGroups": [
                     {
-                        "NetworkInterfaceId": {
-                            "Ref": "ReplicaNodeNetworkInterface"
-                        },
-                        "DeviceIndex": "0"
+                        "Ref": "MongoDBServerSecurityGroupID"
+                    },
+                    {
+                        "Ref": "MongoDBServersSecurityGroupID"
                     }
                 ],
                 "KeyName": {
@@ -286,32 +279,6 @@
                 "IamInstanceProfile": {
                     "Ref": "MongoDBNodeIAMProfileID"
                 },
-                "Tags": [
-                    {
-                        "Key": "Name",
-                        "Value": {
-                            "Ref": "ReplicaNodeNameTag"
-                        }
-                    },
-                    {
-                        "Key": "ClusterReplicaSetCount",
-                        "Value": {
-                            "Ref": "ClusterReplicaSetCount"
-                        }
-                    },
-                    {
-                        "Key": "NodeReplicaSetIndex",
-                        "Value": {
-                            "Ref": "NodeReplicaSetIndex"
-                        }
-                    },
-                    {
-                        "Key": "ReplicaShardIndex",
-                        "Value": {
-                            "Ref": "ReplicaShardIndex"
-                        }
-                    }
-                ],
                 "BlockDeviceMappings": [
                     {
                         "DeviceName": "/dev/xvdg",
@@ -502,53 +469,9 @@
                     "Ref": "NodeInstanceType"
                 }
             }
-        },
-        "NodeInstanceRecoveryAlarm": {
-            "Type": "AWS::CloudWatch::Alarm",
-            "Properties": {
-                "AlarmDescription": "EC2 Autorecovery for Node Instance. Autorecover if we fail EC2 status checks for 5 minutes.",
-                "Namespace": "AWS/EC2",
-                "MetricName": "StatusCheckFailed_System",
-                "Statistic": "Minimum",
-                "Period": "60",
-                "EvaluationPeriods": "5",
-                "ComparisonOperator": "GreaterThanThreshold",
-                "Threshold": "0",
-                "AlarmActions": [
-                    {
-                        "Fn::Join": [
-                            "",
-                            [
-                                "arn:aws:automate:",
-                                {
-                                    "Ref": "AWS::Region"
-                                },
-                                ":ec2:recover"
-                            ]
-                        ]
-                    }
-                ],
-                "Dimensions": [
-                    {
-                        "Name": "InstanceId",
-                        "Value": {
-                            "Ref": "ReplicaNodeInstance"
-                        }
-                    }
-                ]
-            }
         }
     },
     "Outputs": {
-        "NodePrivateIp": {
-            "Value": {
-                "Fn::GetAtt": [
-                    "ReplicaNodeInstance",
-                    "PrivateIp"
-                ]
-            },
-            "Description": "Private IP Address of Node Instance"
-        },
         "NodeInstanceID" : {
             "Description": "The Instance ID",
             "Value" : { "Ref": "ReplicaNodeInstance" }
